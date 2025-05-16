@@ -1,0 +1,274 @@
+.applications-container {
+    display: flex;
+    padding: 2rem 5%;
+    margin-top: 80px;
+    gap: 2rem;
+}
+
+.applications-sidebar {
+    width: 250px;
+    background-color: var(--background-color);
+    padding: 1.5rem;
+    border-radius: 10px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.profile-picture {
+    text-align: center;
+    margin-bottom: 1.5rem;
+}
+
+.profile-picture img {
+    width: 150px;
+    height: 150px;
+    border-radius: 50%;
+    object-fit: cover;
+    margin-bottom: 1rem;
+}
+
+.btn-edit-picture {
+    background-color: var(--primary-color);
+    color: white;
+    border: none;
+    padding: 0.5rem 1rem;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+.btn-edit-picture:hover {
+    background-color: #3a5bef;
+}
+
+.profile-nav {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.profile-nav a {
+    padding: 0.8rem 1rem;
+    text-decoration: none;
+    color: var(--text-color);
+    border-radius: 5px;
+    transition: background-color 0.3s ease;
+}
+
+.profile-nav a:hover {
+    background-color: var(--light-gray);
+}
+
+.profile-nav a.active {
+    background-color: var(--primary-color);
+    color: white;
+}
+
+.applications-content {
+    flex: 1;
+    background-color: var(--background-color);
+    padding: 2rem;
+    border-radius: 10px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.applications-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2rem;
+}
+
+.applications-header h2 {
+    color: var(--text-color);
+}
+
+.application-filters {
+    display: flex;
+    gap: 1rem;
+}
+
+.application-filters select {
+    padding: 0.8rem;
+    border: 1px solid var(--border-color);
+    border-radius: 5px;
+    font-size: 1rem;
+    background-color: white;
+    cursor: pointer;
+}
+
+.applications-list {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+.application-card {
+    background-color: white;
+    padding: 1.5rem;
+    border-radius: 10px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.application-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+}
+
+.application-header h3 {
+    color: var(--text-color);
+}
+
+.status {
+    padding: 0.3rem 0.8rem;
+    border-radius: 20px;
+    font-size: 0.9rem;
+    font-weight: 500;
+}
+
+.status.pending {
+    background-color: #fff3e0;
+    color: #f57c00;
+}
+
+.status.accepted {
+    background-color: #e6f7e6;
+    color: #2e7d32;
+}
+
+.status.rejected {
+    background-color: #ffebee;
+    color: #d32f2f;
+}
+
+.application-details {
+    margin-bottom: 1rem;
+}
+
+.application-details p {
+    color: var(--secondary-color);
+    margin-bottom: 0.5rem;
+}
+
+.application-progress {
+    margin-bottom: 1rem;
+}
+
+.progress-bar {
+    height: 8px;
+    background-color: var(--light-gray);
+    border-radius: 4px;
+    margin-bottom: 0.5rem;
+}
+
+.progress {
+    height: 100%;
+    background-color: var(--primary-color);
+    border-radius: 4px;
+    transition: width 0.3s ease;
+}
+
+.application-actions {
+    display: flex;
+    gap: 1rem;
+}
+
+.btn-continue,
+.btn-view,
+.btn-download,
+.btn-reapply {
+    padding: 0.5rem 1rem;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.btn-continue,
+.btn-view {
+    background-color: var(--primary-color);
+    color: white;
+    border: none;
+}
+
+.btn-continue:hover,
+.btn-view:hover {
+    background-color: #3a5bef;
+}
+
+.btn-download {
+    background-color: #2e7d32;
+    color: white;
+    border: none;
+}
+
+.btn-download:hover {
+    background-color: #1b5e20;
+}
+
+.btn-reapply {
+    background-color: white;
+    color: var(--primary-color);
+    border: 1px solid var(--primary-color);
+}
+
+.btn-reapply:hover {
+    background-color: var(--primary-color);
+    color: white;
+}
+
+.application-stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1.5rem;
+    margin-top: 2rem;
+}
+
+.stat-card {
+    background-color: white;
+    padding: 1.5rem;
+    border-radius: 10px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    text-align: center;
+}
+
+.stat-card h4 {
+    color: var(--secondary-color);
+    margin-bottom: 0.5rem;
+}
+
+.stat-number {
+    font-size: 2rem;
+    font-weight: 600;
+    color: var(--text-color);
+}
+
+@media (max-width: 768px) {
+    .applications-container {
+        flex-direction: column;
+    }
+
+    .applications-sidebar {
+        width: 100%;
+    }
+
+    .applications-header {
+        flex-direction: column;
+        gap: 1rem;
+        align-items: flex-start;
+    }
+
+    .application-filters {
+        flex-direction: column;
+        width: 100%;
+    }
+
+    .application-actions {
+        flex-direction: column;
+    }
+
+    .application-stats {
+        grid-template-columns: 1fr;
+    }
+} 
