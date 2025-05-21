@@ -92,16 +92,21 @@ body {
 }
 
 .btn-login, .btn-register {
-    padding: 8px 20px;
+    padding: 0.5rem 1.2rem;
     border-radius: 8px;
     text-decoration: none;
     transition: all 0.3s ease;
     font-weight: 500;
+    font-size: 0.95rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 90px;
 }
 
 .btn-login {
     color: #4a6bff;
-    border: 2px solid #4a6bff;
+    border: 1.5px solid #4a6bff;
     background-color: transparent;
 }
 
@@ -116,7 +121,7 @@ body {
     background-color: #4a6bff;
     color: white;
     margin-left: 8px;
-    border: 2px solid #4a6bff;
+    border: 1.5px solid #4a6bff;
 }
 
 .btn-register:hover {
@@ -374,6 +379,12 @@ main {
     .feature-card,
     .university-card {
         padding: 2rem;
+    }
+
+    .btn-login, .btn-register {
+        width: 100%;
+        padding: 0.7rem 1.2rem;
+        margin: 0.3rem 0;
     }
 }
 
