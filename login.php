@@ -2,6 +2,55 @@
 require_once 'config/database.php';
 require_once 'config/session.php';
 
+// Check if user is already logged in
+if (isset($_SESSION['user_id'])) {
+    // Get the requested URL from the query parameter
+    $redirect_url = $_GET['redirect'] ?? '';
+    
+    // Validate and sanitize the redirect URL
+    $redirect_url = filter_var($redirect_url, FILTER_SANITIZE_URL);
+    
+    // Ensure the redirect URL is within our domain
+    if (strpos($redirect_url, 'http') === 0) {
+        $redirect_url = '';
+    }
+    
+    // Redirect based on user role and requested URL
+    switch($_SESSION['user_role']) {
+        case 'student':
+            if (empty($redirect_url)) {
+                $redirect_url = 'dashboard.php';
+            }
+            if (strpos($redirect_url, 'university/dashboard') !== false) {
+                header("Location: dashboard.php");
+            } else {
+                header("Location: " . $redirect_url);
+            }
+            break;
+        case 'university':
+            // Always redirect to university dashboard by default
+            if (empty($redirect_url) || strpos($redirect_url, 'dashboard.php') !== false) {
+                header("Location: university/dashboard");
+            } else {
+                header("Location: " . $redirect_url);
+            }
+            break;
+        case 'admin':
+            if (empty($redirect_url)) {
+                $redirect_url = 'admin/dashboard.php';
+            }
+            if (strpos($redirect_url, 'admin/') === false) {
+                header("Location: admin/dashboard.php");
+            } else {
+                header("Location: " . $redirect_url);
+            }
+            break;
+        default:
+            header("Location: " . ($redirect_url ?: 'index.php'));
+    }
+    exit();
+}
+
 $error = '';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -23,19 +72,49 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             if (password_verify($password, $user['password'])) {
                 setUserSession($user);
                 
-                // Redirect based on role
+                // Get the requested URL from the query parameter
+                $redirect_url = $_GET['redirect'] ?? '';
+                
+                // Validate and sanitize the redirect URL
+                $redirect_url = filter_var($redirect_url, FILTER_SANITIZE_URL);
+                
+                // Ensure the redirect URL is within our domain
+                if (strpos($redirect_url, 'http') === 0) {
+                    $redirect_url = '';
+                }
+                
+                // Redirect based on role and requested URL
                 switch($user['role']) {
                     case 'student':
-                        header("Location: dashboard.php");
+                        if (empty($redirect_url)) {
+                            $redirect_url = 'dashboard.php';
+                        }
+                        if (strpos($redirect_url, 'university/dashboard') !== false) {
+                            header("Location: dashboard.php");
+                        } else {
+                            header("Location: " . $redirect_url);
+                        }
                         break;
                     case 'university':
-                        header("Location: universities.php");
+                        // Always redirect to university dashboard by default
+                        if (empty($redirect_url) || strpos($redirect_url, 'dashboard.php') !== false) {
+                            header("Location: university/dashboard");
+                        } else {
+                            header("Location: " . $redirect_url);
+                        }
                         break;
                     case 'admin':
-                        header("Location: admin/dashboard.php");
+                        if (empty($redirect_url)) {
+                            $redirect_url = 'admin/dashboard.php';
+                        }
+                        if (strpos($redirect_url, 'admin/') === false) {
+                            header("Location: admin/dashboard.php");
+                        } else {
+                            header("Location: " . $redirect_url);
+                        }
                         break;
                     default:
-                        header("Location: index.php");
+                        header("Location: " . ($redirect_url ?: 'index.php'));
                 }
                 exit();
             } else {

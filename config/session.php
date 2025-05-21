@@ -1,37 +1,39 @@
 <?php
-session_start();
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
 
-function isLoggedIn() {
+function is_authenticated() {
     return isset($_SESSION['user_id']);
 }
 
-function requireLogin() {
-    if (!isLoggedIn()) {
+function require_auth() {
+    if (!is_authenticated()) {
         header("Location: login.php");
         exit();
     }
 }
 
-function getUserRole() {
-    return $_SESSION['role'] ?? null;
+function get_user_role() {
+    return $_SESSION['user_role'] ?? null;
 }
 
-function requireRole($role) {
-    requireLogin();
-    if (getUserRole() !== $role) {
+function require_role($role) {
+    require_auth();
+    if (get_user_role() !== $role) {
         header("Location: unauthorized.php");
         exit();
     }
 }
 
-function setUserSession($user) {
+function set_user_session($user) {
     $_SESSION['user_id'] = $user['id'];
-    $_SESSION['email'] = $user['email'];
-    $_SESSION['name'] = $user['name'];
-    $_SESSION['role'] = $user['role'];
+    $_SESSION['user_email'] = $user['email'];
+    $_SESSION['user_name'] = $user['name'];
+    $_SESSION['user_role'] = $user['role'];
 }
 
-function clearUserSession() {
+function clear_user_session() {
     session_unset();
     session_destroy();
 }

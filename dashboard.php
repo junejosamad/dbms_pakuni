@@ -1,3 +1,17 @@
+<?php
+session_start();
+
+// Check if user is not logged in
+if (!isset($_SESSION['user_id'])) {
+    // Redirect to login page
+    header("Location: login.php");
+    exit();
+}
+
+// Get user information from session
+$user_name = $_SESSION['user_name'] ?? 'User';
+$user_role = $_SESSION['user_role'] ?? 'Student';
+?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -18,8 +32,12 @@
             <li><a href="universities.php">Universities</a></li>
             <li><a href="admissions.php">Admissions</a></li>
             <li><a href="dashboard.php" class="active">Dashboard</a></li>
-            <li><a href="login.php" class="btn-login">Login</a></li>
-            <li><a href="register.php" class="btn-register">Register</a></li>
+            <?php if (isset($_SESSION['user_id'])): ?>
+                <li><a href="logout.php" class="btn-login">Logout</a></li>
+            <?php else: ?>
+                <li><a href="login.php" class="btn-login">Login</a></li>
+                <li><a href="register.php" class="btn-register">Register</a></li>
+            <?php endif; ?>
         </ul>
     </nav>
 
@@ -27,8 +45,8 @@
         <aside class="sidebar">
             <div class="user-profile">
                 <img src="https://via.placeholder.com/100" alt="Profile Picture" class="profile-pic">
-                <h3>John Doe</h3>
-                <p>Student</p>
+                <h3><?php echo htmlspecialchars($user_name); ?></h3>
+                <p><?php echo htmlspecialchars($user_role); ?></p>
             </div>
             <nav class="sidebar-nav">
                 <ul>
@@ -43,7 +61,7 @@
 
         <div class="dashboard-content">
             <div class="dashboard-header">
-                <h2>Welcome back, John!</h2>
+                <h2>Welcome back, <?php echo htmlspecialchars($user_name); ?>!</h2>
                 <div class="search-bar">
                     <input type="text" placeholder="Search...">
                     <i class="fas fa-search"></i>
