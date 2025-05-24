@@ -1,6 +1,56 @@
 <?php
 require_once 'config/database.php';
 require_once 'config/session.php';
+require_once 'includes/functions/auth.php';
+
+// Check if user is already logged in
+if (isset($_SESSION['user_id'])) {
+    // Get the requested URL from the query parameter
+    $redirect_url = $_GET['redirect'] ?? '';
+    
+    // Validate and sanitize the redirect URL
+    $redirect_url = filter_var($redirect_url, FILTER_SANITIZE_URL);
+    
+    // Ensure the redirect URL is within our domain
+    if (strpos($redirect_url, 'http') === 0) {
+        $redirect_url = '';
+    }
+    
+    // Redirect based on user role and requested URL
+    switch($_SESSION['user_role']) {
+        case 'student':
+            if (empty($redirect_url)) {
+                $redirect_url = 'dashboard.php';
+            }
+            if (strpos($redirect_url, 'university/dashboard') !== false) {
+                header("Location: dashboard.php");
+            } else {
+                header("Location: " . $redirect_url);
+            }
+            break;
+        case 'university':
+            // Always redirect to university dashboard by default
+            if (empty($redirect_url) || strpos($redirect_url, 'dashboard.php') !== false) {
+                header("Location: university-dashboard.php");
+            } else {
+                header("Location: " . $redirect_url);
+            }
+            break;
+        case 'admin':
+            if (empty($redirect_url)) {
+                $redirect_url = 'admin/dashboard.php';
+            }
+            if (strpos($redirect_url, 'admin/') === false) {
+                header("Location: admin/dashboard.php");
+            } else {
+                header("Location: " . $redirect_url);
+            }
+            break;
+        default:
+            header("Location: " . ($redirect_url ?: 'index.php'));
+    }
+    exit();
+}
 
 $error = '';
 
@@ -11,38 +61,56 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (empty($email) || empty($password)) {
         $error = "Please fill in all fields";
     } else {
-        $database = new Database();
-        $db = $database->getConnection();
-
-        $query = "SELECT * FROM users WHERE email = :email LIMIT 1";
-        $stmt = $db->prepare($query);
-        $stmt->bindParam(":email", $email);
-        $stmt->execute();
-
-        if ($user = $stmt->fetch()) {
-            if (password_verify($password, $user['password'])) {
-                setUserSession($user);
-                
-                // Redirect based on role
-                switch($user['role']) {
-                    case 'student':
-                        header("Location: dashboard.php");
-                        break;
-                    case 'university':
-                        header("Location: universities.php");
-                        break;
-                    case 'admin':
-                        header("Location: admin/dashboard.php");
-                        break;
-                    default:
-                        header("Location: index.php");
-                }
-                exit();
-            } else {
-                $error = "Invalid email or password";
+        $result = login_user($email, $password);
+        
+        if ($result['success']) {
+            // Get the requested URL from the query parameter
+            $redirect_url = $_GET['redirect'] ?? '';
+            
+            // Validate and sanitize the redirect URL
+            $redirect_url = filter_var($redirect_url, FILTER_SANITIZE_URL);
+            
+            // Ensure the redirect URL is within our domain
+            if (strpos($redirect_url, 'http') === 0) {
+                $redirect_url = '';
             }
+            
+            // Redirect based on role and requested URL
+            switch($result['user']['role']) {
+                case 'student':
+                    if (empty($redirect_url)) {
+                        $redirect_url = 'dashboard.php';
+                    }
+                    if (strpos($redirect_url, 'university/dashboard') !== false) {
+                        header("Location: dashboard.php");
+                    } else {
+                        header("Location: " . $redirect_url);
+                    }
+                    break;
+                case 'university':
+                    // Always redirect to university dashboard by default
+                    if (empty($redirect_url) || strpos($redirect_url, 'dashboard.php') !== false) {
+                        header("Location: university-dashboard.php");
+                    } else {
+                        header("Location: " . $redirect_url);
+                    }
+                    break;
+                case 'admin':
+                    if (empty($redirect_url)) {
+                        $redirect_url = 'admin/dashboard.php';
+                    }
+                    if (strpos($redirect_url, 'admin/') === false) {
+                        header("Location: admin/dashboard.php");
+                    } else {
+                        header("Location: " . $redirect_url);
+                    }
+                    break;
+                default:
+                    header("Location: " . ($redirect_url ?: 'index.php'));
+            }
+            exit();
         } else {
-            $error = "Invalid email or password";
+            $error = $result['message'];
         }
     }
 }
@@ -60,12 +128,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <body>
     <nav class="navbar">
         <div class="logo">
-            <h1>PakUni</h1>
+            <h1><a href="index.php">PakUni</a></h1>
         </div>
         <ul class="nav-links">
             <li><a href="index.php">Home</a></li>
             <li><a href="universities.php">Universities</a></li>
-            <li><a href="admissions.php">Admissions</a></li>
             <li><a href="login.php" class="btn-login">Login</a></li>
             <li><a href="register.php" class="btn-register">Register</a></li>
         </ul>
@@ -119,6 +186,33 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             </p>
         </div>
     </main>
+
+    <section class="featured-universities">
+        <div class="university-banner">
+            <img src="https://placehold.co/1200x400/4a90e2/ffffff?text=Top+Universities+in+Pakistan" alt="Featured Universities" class="university-image">
+            <div class="university-overlay">
+                <h2>Top Universities in Pakistan</h2>
+                <p>Discover leading institutions for your academic journey</p>
+            </div>
+        </div>
+        <div class="university-list">
+            <div class="university-card">
+                <img src="https://placehold.co/400x300/4a90e2/ffffff?text=LUMS" alt="LUMS">
+                <h3>LUMS</h3>
+                <p>Lahore University of Management Sciences</p>
+            </div>
+            <div class="university-card">
+                <img src="https://placehold.co/400x300/4a90e2/ffffff?text=NUST" alt="NUST">
+                <h3>NUST</h3>
+                <p>National University of Sciences and Technology</p>
+            </div>
+            <div class="university-card">
+                <img src="https://placehold.co/400x300/4a90e2/ffffff?text=AKU" alt="AKU">
+                <h3>AKU</h3>
+                <p>Aga Khan University</p>
+            </div>
+        </div>
+    </section>
 
     <footer>
         <div class="footer-content">
