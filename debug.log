@@ -1,0 +1,130 @@
+[2025-05-23 18:10:17] Add Program - User ID: 2
+[2025-05-23 18:10:17] Add Program - User Role: university
+[2025-05-23 18:10:17] Add Program - University ID: null
+[2025-05-23 18:10:17] Form submitted with POST data: Array
+(
+    [name] => Bachelors of Business Administration
+    [degree_type] => Undergraduate
+    [duration] => 4
+    [admission_deadline] => 2025-06-07
+    [description] => hhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhh
+    [requirements] => rhsyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy
+    [is_active] => on
+    [ajax] => 1
+)
+
+[2025-05-23 18:10:17] Session data: Array
+(
+    [user_id] => 2
+    [user_email] => kzarmeena12@gmail.com
+    [user_name] => meeno
+    [user_role] => university
+)
+
+[2025-05-23 18:10:17] Prepared program data: Array
+(
+    [name] => Bachelors of Business Administration
+    [description] => hhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhh
+    [duration] => 4
+    [degree_type] => Undergraduate
+    [admission_deadline] => 2025-06-07
+    [requirements] => rhsyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy
+    [status] => active
+)
+
+[2025-05-23 18:10:17] Starting addProgram with data: Array
+(
+    [name] => Bachelors of Business Administration
+    [description] => hhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhh
+    [duration] => 4
+    [degree_type] => Undergraduate
+    [admission_deadline] => 2025-06-07
+    [requirements] => rhsyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy
+    [status] => active
+)
+
+[2025-05-23 18:10:17] University ID: 
+[2025-05-23 18:10:17] Error: Invalid university_id
+[2025-05-23 18:10:17] Failed to add program
+[2025-05-23 18:10:25] Add Program - User ID: 2
+[2025-05-23 18:10:25] Add Program - User Role: university
+[2025-05-23 18:10:25] Add Program - University ID: null
+[2025-05-24 07:39:30] Add Program - User ID: 2
+[2025-05-24 07:39:30] Add Program - User Role: university
+[2025-05-24 07:39:30] Add Program - University ID: null
+[2025-05-24 07:39:51] Add Program - User ID: 2
+[2025-05-24 07:39:51] Add Program - User Role: university
+[2025-05-24 07:39:51] Add Program - University ID: null
+[2025-05-24 07:39:51] Form submitted with POST data: Array
+(
+    [name] => Bachelors of Business Administration
+    [degree_type] => Undergraduate
+    [duration] => 4
+    [admission_deadline] => 2025-06-07
+    [description] => m m m
+    [requirements] => nmmmnmmnmn
+    [is_active] => on
+    [ajax] => 1
+)
+
+[2025-05-24 07:39:51] Session data: Array
+(
+    [user_id] => 2
+    [user_email] => kzarmeena12@gmail.com
+    [user_name] => meeno
+    [user_role] => university
+)
+
+[2025-05-24 07:39:51] Prepared program data: Array
+(
+    [name] => Bachelors of Business Administration
+    [description] => m m m
+    [duration] => 4
+    [degree_type] => Undergraduate
+    [admission_deadline] => 2025-06-07
+    [requirements] => nmmmnmmnmn
+    [status] => active
+)
+
+[2025-05-24 07:39:51] Failed to add program
+[2025-05-24 07:42:44] Add Program - User ID: 2
+[2025-05-24 07:42:44] Add Program - User Role: university
+[2025-05-24 07:42:44] Add Program - University ID: null
+[2025-05-24 07:43:12] Add Program - User ID: 2
+[2025-05-24 07:43:12] Add Program - User Role: university
+[2025-05-24 07:43:12] Add Program - University ID: null
+[2025-05-24 07:43:30] Add Program - User ID: 2
+[2025-05-24 07:43:30] Add Program - User Role: university
+[2025-05-24 07:43:30] Add Program - University ID: null
+[2025-05-24 07:43:30] Form submitted with POST data: Array
+(
+    [name] => Bachelors of Business Administration
+    [degree_type] => Undergraduate
+    [duration] => 4
+    [admission_deadline] => 2025-06-07
+    [description] => ergfgdfgfg
+    [requirements] => fgdfgdfgdfgfd
+    [is_active] => on
+    [ajax] => 1
+)
+
+[2025-05-24 07:43:30] Session data: Array
+(
+    [user_id] => 2
+    [user_email] => kzarmeena12@gmail.com
+    [user_name] => meeno
+    [user_role] => university
+)
+
+[2025-05-24 07:43:30] Prepared program data: Array
+(
+    [name] => Bachelors of Business Administration
+    [description] => ergfgdfgfg
+    [duration] => 4
+    [degree_type] => Undergraduate
+    [admission_deadline] => 2025-06-07
+    [requirements] => fgdfgdfgdfgfd
+    [status] => active
+)
+
+[2025-05-24 07:43:31] Failed to add program

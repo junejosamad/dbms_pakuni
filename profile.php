@@ -1,134 +1,105 @@
-<?php
-require_once __DIR__ . '/../../includes/templates/header.php';
-require_once __DIR__ . '/../../includes/functions/auth.php';
-
-// Ensure only university users can access this page
-require_role('university');
-
-$pageTitle = 'University Profile';
-
-// Get university ID and profile
-$userId = $_SESSION['user_id'];
-$db = new Database();
-$profile = null;
-
-try {
-    $stmt = $db->prepare("
-        SELECT up.*, u.email as contact_email
-        FROM university_profiles up
-        JOIN users u ON up.user_id = u.id
-        WHERE up.user_id = ?
-    ");
-    $stmt->execute([$userId]);
-    $profile = $stmt->fetch(PDO::FETCH_ASSOC);
-} catch (PDOException $e) {
-    $errors[] = "Error fetching profile: " . $e->getMessage();
-}
-
-// Handle form submission
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    try {
-        $stmt = $db->prepare("
-            UPDATE university_profiles 
-            SET name = ?, location = ?, contact_email = ?, website_url = ?, 
-                description = ?, founded_year = ?, total_students = ?, accreditation = ?
-            WHERE user_id = ?
-        ");
-        $stmt->execute([
-            $_POST['name'],
-            $_POST['location'],
-            $_POST['contact_email'],
-            $_POST['website_url'],
-            $_POST['description'],
-            $_POST['founded_year'],
-            $_POST['total_students'],
-            $_POST['accreditation'],
-            $userId
-        ]);
-        $success[] = "Profile updated successfully!";
-        
-        // Refresh profile data
-        $stmt = $db->prepare("
-            SELECT up.*, u.email as contact_email
-            FROM university_profiles up
-            JOIN users u ON up.user_id = u.id
-            WHERE up.user_id = ?
-        ");
-        $stmt->execute([$userId]);
-        $profile = $stmt->fetch(PDO::FETCH_ASSOC);
-    } catch (PDOException $e) {
-        $errors[] = "Error updating profile: " . $e->getMessage();
-    }
-}
-?>
-
-<div class="dashboard-container">
-    <div class="sidebar">
-        <ul>
-            <li><a href="<?php echo $baseUrl; ?>/university/dashboard"><i class="fas fa-home"></i> Dashboard</a></li>
-            <li><a href="<?php echo $baseUrl; ?>/university/applications"><i class="fas fa-file-alt"></i> Applications</a></li>
-            <li><a href="<?php echo $baseUrl; ?>/university/deadlines"><i class="fas fa-calendar-alt"></i> Manage Deadlines</a></li>
-            <li><a href="<?php echo $baseUrl; ?>/university/profile" class="active"><i class="fas fa-university"></i> University Profile</a></li>
-            <li><a href="<?php echo $baseUrl; ?>/university/programs"><i class="fas fa-graduation-cap"></i> Programs</a></li>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Profile - PakUni</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/profile.css">
+    <link rel="stylesheet" href="css/dashboard.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="logo">
+            <h1>PakUni</h1>
+        </div>
+        <ul class="nav-links">
+            <li><a href="index.html">Home</a></li>
+            <li><a href="universities.html">Universities</a></li>
+            <li><a href="admissions.html">Admissions</a></li>
+            <li><a href="dashboard.html">Dashboard</a></li>
+            <li><a href="login.html" class="btn-login">Login</a></li>
+            <li><a href="register.html" class="btn-register">Register</a></li>
         </ul>
-    </div>
-    <div class="main-content">
-        <h1>University Profile</h1>
-        
-        <?php if (!empty($errors)): ?>
-            <div class="error-messages">
-                <?php foreach ($errors as $error): ?>
-                    <div class="error"><?php echo htmlspecialchars($error); ?></div>
-                <?php endforeach; ?>
-            </div>
-        <?php endif; ?>
+    </nav>
 
-        <?php if (!empty($success)): ?>
-            <div class="success-messages">
-                <?php foreach ($success as $message): ?>
-                    <div class="success"><?php echo htmlspecialchars($message); ?></div>
-                <?php endforeach; ?>
+    <main class="profile-container">
+        <aside class="sidebar">
+            <div class="user-profile">
+                <img src="https://via.placeholder.com/100" alt="Profile Picture" class="profile-pic">
+                <h3>John Doe</h3>
+                <p>Student</p>
             </div>
-        <?php endif; ?>
+            <nav class="sidebar-nav">
+                <ul>
+                    <li><a href="#overview" class="active"><i class="fas fa-home"></i> Overview</a></li>
+                    <li><a href="my-applications.html"><i class="fas fa-file-alt"></i> My Applications</a></li>
+                    <li><a href="documents.html"><i class="fas fa-folder"></i> Documents</a></li>
+                    <li><a href="#"><i class="fas fa-user"></i> Profile</a></li>
+                    <li><a href="settings.html"><i class="fas fa-cog"></i> Settings</a></li>
+                </ul>
+            </nav>
+        </aside>
 
-        <div class="profile-section">
-            <form method="POST" class="profile-form">
+        <div class="profile-content" id="overview">
+            <h2>Personal Information</h2>
+            <form class="profile-form">
                 <div class="form-group">
-                    <label for="name">University Name</label>
-                    <input type="text" id="name" name="name" value="<?php echo htmlspecialchars($profile['name'] ?? ''); ?>" required>
+                    <label for="fullName">Full Name</label>
+                    <input type="text" id="fullName" value="John Doe">
                 </div>
                 <div class="form-group">
-                    <label for="location">Location</label>
-                    <input type="text" id="location" name="location" value="<?php echo htmlspecialchars($profile['location'] ?? ''); ?>" required>
+                    <label for="email">Email</label>
+                    <input type="email" id="email" value="john.doe@example.com">
                 </div>
                 <div class="form-group">
-                    <label for="contact_email">Contact Email</label>
-                    <input type="email" id="contact_email" name="contact_email" value="<?php echo htmlspecialchars($profile['contact_email'] ?? ''); ?>" required>
+                    <label for="phone">Phone Number</label>
+                    <input type="tel" id="phone" value="+92 300 1234567">
                 </div>
                 <div class="form-group">
-                    <label for="website_url">Website URL</label>
-                    <input type="url" id="website_url" name="website_url" value="<?php echo htmlspecialchars($profile['website_url'] ?? ''); ?>">
+                    <label for="address">Address</label>
+                    <textarea id="address">123 University Road, Lahore, Punjab</textarea>
                 </div>
                 <div class="form-group">
-                    <label for="founded_year">Founded Year</label>
-                    <input type="number" id="founded_year" name="founded_year" value="<?php echo htmlspecialchars($profile['founded_year'] ?? ''); ?>">
+                    <label for="education">Education</label>
+                    <select id="education">
+                        <option value="matric">Matric</option>
+                        <option value="intermediate">Intermediate</option>
+                        <option value="bachelors">Bachelor's</option>
+                        <option value="masters">Master's</option>
+                    </select>
                 </div>
-                <div class="form-group">
-                    <label for="total_students">Total Students</label>
-                    <input type="number" id="total_students" name="total_students" value="<?php echo htmlspecialchars($profile['total_students'] ?? ''); ?>">
-                </div>
-                <div class="form-group">
-                    <label for="accreditation">Accreditation</label>
-                    <input type="text" id="accreditation" name="accreditation" value="<?php echo htmlspecialchars($profile['accreditation'] ?? ''); ?>">
-                </div>
-                <div class="form-group">
-                    <label for="description">Description</label>
-                    <textarea id="description" name="description" rows="5"><?php echo htmlspecialchars($profile['description'] ?? ''); ?></textarea>
-                </div>
-                <button type="submit" class="btn-update">Update Profile</button>
+                <button type="submit" class="btn-save">Save Changes</button>
             </form>
         </div>
-    </div>
-</div>
+    </main>
 
-<?php require_once __DIR__ . '/../../includes/templates/footer.php'; ?> 
+    <footer>
+        <div class="footer-content">
+            <div class="footer-section">
+                <h3>About PakUni</h3>
+                <p>Simplifying university applications for students across Pakistan</p>
+            </div>
+            <div class="footer-section">
+                <h3>Quick Links</h3>
+                <ul>
+                    <li><a href="about.html">About Us</a></li>
+                    <li><a href="contact.html">Contact</a></li>
+                    <li><a href="faq.html">FAQ</a></li>
+                </ul>
+            </div>
+            <div class="footer-section">
+                <h3>Contact Us</h3>
+                <p>Email: info@pakuni.com</p>
+                <p>Phone: +92 300 1234567</p>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <p>&copy; 2024 PakUni. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <script src="js/profile.js"></script>
+</body>
+</html> 

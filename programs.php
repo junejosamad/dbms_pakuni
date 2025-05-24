@@ -1,6 +1,6 @@
 <?php
-require_once __DIR__ . '/../../includes/templates/header.php';
-require_once __DIR__ . '/../../includes/functions/auth.php';
+require_once 'config/session.php';
+require_once 'university-dashboard-functions.php';
 
 // Debug logging
 error_log("Programs page accessed");
@@ -9,6 +9,7 @@ error_log("POST data: " . print_r($_POST, true));
 error_log("SESSION data: " . print_r($_SESSION, true));
 
 // Ensure only university users can access this page
+require_auth();
 require_role('university');
 
 $pageTitle = 'Manage Programs';
@@ -23,17 +24,15 @@ if (!$userId) {
     exit();
 }
 
-$db = new Database();
-$universityId = null;
+// Initialize dashboard
+$dashboard = new UniversityDashboard($userId);
+$universityId = $dashboard->getUniversityId();
+error_log("University ID from database: " . $universityId);
 
-try {
-    $stmt = $db->prepare("SELECT id FROM universities WHERE user_id = ?");
-    $stmt->execute([$userId]);
-    $universityId = $stmt->fetchColumn();
-    error_log("University ID from database: " . $universityId);
-} catch (PDOException $e) {
-    error_log("Error fetching university ID: " . $e->getMessage());
-    $errors[] = "Error fetching university ID: " . $e->getMessage();
+// If no university profile, show message and do not allow adding programs
+if (!$universityId) {
+    echo '<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Manage Programs - PakUni</title><link rel="stylesheet" href="css/style.css"><link rel="stylesheet" href="css/dashboard.css"><link rel="stylesheet" href="css/university-dashboard.css"><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"></head><body><nav class="navbar"><div class="logo"><h1><a href="index.php">PakUni</a></h1></div><ul class="nav-links"><li><a href="index.php">Home</a></li><li><a href="universities.php">Universities</a></li><li><a href="university-dashboard.php">Dashboard</a></li><li><a href="logout.php" class="btn-login">Logout</a></li></ul></nav><div class="dashboard-container"><aside class="sidebar"><div class="user-profile"><img src="https://via.placeholder.com/100" alt="Profile Picture" class="profile-pic"><h3>' . htmlspecialchars($_SESSION['user_name'] ?? 'University Representative') . '</h3><p>University Representative</p></div><nav class="sidebar-nav"><ul><li><a href="university-dashboard.php"><i class="fas fa-home"></i> Overview</a></li><li><a href="applications.php"><i class="fas fa-file-alt"></i> Applications</a></li><li><a href="document-verification.php"><i class="fas fa-file-upload"></i> Document Verification</a></li><li><a href="deadlines.php"><i class="fas fa-calendar"></i> Manage Deadlines</a></li><li><a href="programs.php" class="active"><i class="fas fa-graduation-cap"></i> Programs</a></li><li><a href="university-profile.php"><i class="fas fa-university"></i> University Profile</a></li><li><a href="settings.php"><i class="fas fa-cog"></i> Settings</a></li></ul></nav></aside><main class="main-content"><h1>Manage Programs</h1><div class="error-messages"><div class="error">You must complete your university profile before you can add programs.</div></div></main></div></body></html>';
+    exit();
 }
 
 // Handle form submissions
@@ -41,49 +40,30 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     error_log("Processing POST request");
     
     if (isset($_POST['add_program'])) {
-        error_log("Add program form submitted");
         try {
-            // Validate required fields
-            $required_fields = ['name', 'degree_type', 'duration', 'admission_deadline'];
-            $missing_fields = [];
+            // Debug log
+            error_log("Form submitted with data: " . print_r($_POST, true));
             
-            foreach ($required_fields as $field) {
-                if (empty($_POST[$field])) {
-                    $missing_fields[] = $field;
-                }
-            }
+            // Prepare program data
+            $program_data = [
+                'name' => trim($_POST['name']),
+                'tuition_fee' => floatval($_POST['tuition_fee'] ?? 0),
+                'ranking' => intval($_POST['ranking'] ?? 0),
+                'admission_deadline' => $_POST['admission_deadline']
+            ];
             
-            if (!empty($missing_fields)) {
-                error_log("Missing required fields: " . implode(', ', $missing_fields));
-                $errors[] = "Please fill in all required fields: " . implode(', ', $missing_fields);
+            error_log("Prepared program data: " . print_r($program_data, true));
+            
+            // Add program
+            if ($dashboard->addProgram($program_data)) {
+                $success[] = "Program added successfully!";
+                error_log("Program added successfully");
+                // Redirect to prevent form resubmission
+                header("Location: " . $_SERVER['PHP_SELF']);
+                exit();
             } else {
-                // Initialize dashboard
-                $dashboard = new UniversityDashboard($_SESSION['user_id']);
-                
-                // Prepare program data
-                $program_data = [
-                    'name' => trim($_POST['name']),
-                    'degree_type' => trim($_POST['degree_type']),
-                    'duration' => (int)$_POST['duration'],
-                    'admission_deadline' => $_POST['admission_deadline'],
-                    'description' => trim($_POST['description'] ?? ''),
-                    'requirements' => trim($_POST['requirements'] ?? ''),
-                    'status' => 'active'
-                ];
-                
-                error_log("Prepared program data: " . print_r($program_data, true));
-                
-                // Add program
-                if ($dashboard->addProgram($program_data)) {
-                    $success[] = "Program added successfully!";
-                    error_log("Program added successfully");
-                    // Redirect to prevent form resubmission
-                    header("Location: " . $_SERVER['PHP_SELF']);
-                    exit();
-                } else {
-                    $errors[] = "Failed to add program. Please check the error logs for details.";
-                    error_log("Failed to add program");
-                }
+                $errors[] = "Failed to add program. Please check the error logs for details.";
+                error_log("Failed to add program");
             }
         } catch (Exception $e) {
             error_log("Error adding program: " . $e->getMessage());
@@ -121,173 +101,134 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 }
 
 // Fetch programs
-$programs = [];
-if ($universityId) {
-    try {
-        $stmt = $db->prepare("SELECT * FROM programs WHERE university_id = ? ORDER BY name");
-        $stmt->execute([$universityId]);
-        $programs = $stmt->fetchAll(PDO::FETCH_ASSOC);
-        error_log("Fetched " . count($programs) . " programs");
-    } catch (PDOException $e) {
-        error_log("Error fetching programs: " . $e->getMessage());
-        $errors[] = "Error fetching programs: " . $e->getMessage();
-    }
-}
+$programs = $dashboard->getUniversityPrograms() ?? [];
+error_log("Fetched " . count($programs) . " programs");
 ?>
-
-<div class="dashboard-container">
-    <div class="sidebar">
-        <ul>
-            <li><a href="<?php echo $baseUrl; ?>/university/dashboard"><i class="fas fa-home"></i> Dashboard</a></li>
-            <li><a href="<?php echo $baseUrl; ?>/university/applications"><i class="fas fa-file-alt"></i> Applications</a></li>
-            <li><a href="<?php echo $baseUrl; ?>/university/deadlines"><i class="fas fa-calendar-alt"></i> Manage Deadlines</a></li>
-            <li><a href="<?php echo $baseUrl; ?>/university/profile"><i class="fas fa-university"></i> University Profile</a></li>
-            <li><a href="<?php echo $baseUrl; ?>/university/programs" class="active"><i class="fas fa-graduation-cap"></i> Programs</a></li>
-        </ul>
-    </div>
-    <div class="main-content">
-        <h1>Manage Programs</h1>
-        
-        <?php if (!empty($errors)): ?>
-            <div class="error-messages">
-                <?php foreach ($errors as $error): ?>
-                    <div class="error"><?php echo htmlspecialchars($error); ?></div>
-                <?php endforeach; ?>
-            </div>
-        <?php endif; ?>
-
-        <?php if (!empty($success)): ?>
-            <div class="success-messages">
-                <?php foreach ($success as $message): ?>
-                    <div class="success"><?php echo htmlspecialchars($message); ?></div>
-                <?php endforeach; ?>
-            </div>
-        <?php endif; ?>
-
-        <div class="programs-section">
-            <h2>Add New Program</h2>
-            <form method="POST" class="add-program-form" id="addProgramForm">
-                <div class="form-group">
-                    <label for="name">Program Name *</label>
-                    <input type="text" id="name" name="name" required>
-                </div>
-                <div class="form-group">
-                    <label for="degree_type">Degree Type *</label>
-                    <select id="degree_type" name="degree_type" required>
-                        <option value="">Select Degree Type</option>
-                        <option value="Undergraduate">Undergraduate</option>
-                        <option value="Graduate">Graduate</option>
-                        <option value="PhD">PhD</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label for="duration">Duration (years) *</label>
-                    <input type="number" id="duration" name="duration" min="1" max="8" required>
-                </div>
-                <div class="form-group">
-                    <label for="admission_deadline">Admission Deadline *</label>
-                    <input type="date" id="admission_deadline" name="admission_deadline" required>
-                </div>
-                <div class="form-group">
-                    <label for="description">Description</label>
-                    <textarea id="description" name="description" rows="4"></textarea>
-                </div>
-                <div class="form-group">
-                    <label for="requirements">Requirements</label>
-                    <textarea id="requirements" name="requirements" rows="4"></textarea>
-                </div>
-                <button type="submit" name="add_program" class="btn-add">Add Program</button>
-            </form>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Manage Programs - PakUni</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/dashboard.css">
+    <link rel="stylesheet" href="css/university-dashboard.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="logo">
+            <h1><a href="index.php">PakUni</a></h1>
         </div>
+        <ul class="nav-links">
+            <li><a href="index.php">Home</a></li>
+            <li><a href="universities.php">Universities</a></li>
+            <li><a href="university-dashboard.php">Dashboard</a></li>
+            <li><a href="logout.php" class="btn-login">Logout</a></li>
+        </ul>
+    </nav>
 
-        <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            const form = document.getElementById('addProgramForm');
+    <div class="dashboard-container">
+        <aside class="sidebar">
+            <div class="user-profile">
+                <img src="https://via.placeholder.com/100" alt="Profile Picture" class="profile-pic">
+                <h3><?php echo htmlspecialchars($_SESSION['user_name'] ?? 'University Representative'); ?></h3>
+                <p>University Representative</p>
+            </div>
+            <nav class="sidebar-nav">
+                <ul>
+                    <li><a href="university-dashboard.php"><i class="fas fa-home"></i> Overview</a></li>
+                    <li><a href="applications.php"><i class="fas fa-file-alt"></i> Applications</a></li>
+                    <li><a href="document-verification.php"><i class="fas fa-file-upload"></i> Document Verification</a></li>
+                    <li><a href="deadlines.php"><i class="fas fa-calendar"></i> Manage Deadlines</a></li>
+                    <li><a href="programs.php" class="active"><i class="fas fa-graduation-cap"></i> Programs</a></li>
+                    <li><a href="university-profile.php"><i class="fas fa-university"></i> University Profile</a></li>
+                    <li><a href="settings.php"><i class="fas fa-cog"></i> Settings</a></li>
+                </ul>
+            </nav>
+        </aside>
+
+        <main class="main-content">
+            <h1>Manage Programs</h1>
             
-            form.addEventListener('submit', function(e) {
-                e.preventDefault();
-                
-                // Get form data
-                const formData = new FormData(form);
-                
-                // Show loading state
-                const submitButton = form.querySelector('button[type="submit"]');
-                const originalButtonText = submitButton.innerHTML;
-                submitButton.disabled = true;
-                submitButton.innerHTML = 'Adding Program...';
-                
-                // Submit form
-                fetch(window.location.href, {
-                    method: 'POST',
-                    body: formData
-                })
-                .then(response => {
-                    if (!response.ok) {
-                        throw new Error('Network response was not ok');
-                    }
-                    return response.text();
-                })
-                .then(html => {
-                    // Check if the response contains an error message
-                    if (html.includes('error-message')) {
-                        throw new Error('Server returned an error');
-                    }
-                    // Reload the page to show the new program
-                    window.location.reload();
-                })
-                .catch(error => {
-                    console.error('Error:', error);
-                    // Show error message
-                    const errorDiv = document.createElement('div');
-                    errorDiv.className = 'error-message';
-                    errorDiv.textContent = 'An error occurred while submitting the form. Please try again.';
-                    form.insertBefore(errorDiv, form.firstChild);
-                    
-                    // Reset button state
-                    submitButton.disabled = false;
-                    submitButton.innerHTML = originalButtonText;
-                });
-            });
-        });
-        </script>
-
-        <div class="programs-list-section">
-            <h2>Existing Programs</h2>
-            <?php if (empty($programs)): ?>
-                <p>No programs found. Add a program above.</p>
-            <?php else: ?>
-                <div class="programs-grid">
-                    <?php foreach ($programs as $program): ?>
-                        <div class="program-card">
-                            <form method="POST" class="program-form">
-                                <input type="hidden" name="program_id" value="<?php echo $program['id']; ?>">
-                                <div class="form-group">
-                                    <label>Program Name</label>
-                                    <input type="text" name="program_name" value="<?php echo htmlspecialchars($program['name']); ?>" required>
-                                </div>
-                                <div class="form-group">
-                                    <label>Tuition Fee</label>
-                                    <input type="number" name="tuition_fee" value="<?php echo htmlspecialchars($program['tuition_fee']); ?>" required>
-                                </div>
-                                <div class="form-group">
-                                    <label>Ranking</label>
-                                    <input type="number" name="ranking" value="<?php echo htmlspecialchars($program['ranking']); ?>" required>
-                                </div>
-                                <div class="form-group">
-                                    <label>Admission Deadline</label>
-                                    <input type="date" name="admission_deadline" value="<?php echo $program['admission_deadline']; ?>" required>
-                                </div>
-                                <div class="program-actions">
-                                    <button type="submit" name="update_program" class="btn-update">Update</button>
-                                    <button type="submit" name="delete_program" class="btn-delete" onclick="return confirm('Are you sure you want to delete this program?')">Delete</button>
-                                </div>
-                            </form>
-                        </div>
+            <?php if (!empty($errors)): ?>
+                <div class="error-messages">
+                    <?php foreach ($errors as $error): ?>
+                        <div class="error"><?php echo htmlspecialchars($error); ?></div>
                     <?php endforeach; ?>
                 </div>
             <?php endif; ?>
-        </div>
-    </div>
-</div>
 
-<?php require_once __DIR__ . '/../../includes/templates/footer.php'; ?> 
+            <?php if (!empty($success)): ?>
+                <div class="success-messages">
+                    <?php foreach ($success as $message): ?>
+                        <div class="success"><?php echo htmlspecialchars($message); ?></div>
+                    <?php endforeach; ?>
+                </div>
+            <?php endif; ?>
+
+            <div class="programs-section">
+                <h2>Add New Program</h2>
+                <form method="POST" class="add-program-form" id="addProgramForm">
+                    <div class="form-group">
+                        <label for="name">Program Name *</label>
+                        <input type="text" id="name" name="name" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="tuition_fee">Tuition Fee</label>
+                        <input type="number" id="tuition_fee" name="tuition_fee" min="0" step="0.01">
+                    </div>
+                    <div class="form-group">
+                        <label for="ranking">Ranking</label>
+                        <input type="number" id="ranking" name="ranking" min="0">
+                    </div>
+                    <div class="form-group">
+                        <label for="admission_deadline">Admission Deadline *</label>
+                        <input type="date" id="admission_deadline" name="admission_deadline" required>
+                    </div>
+                    <button type="submit" name="add_program" class="btn-add">Add Program</button>
+                </form>
+            </div>
+
+            <div class="programs-list-section">
+                <h2>Existing Programs</h2>
+                <?php if (empty($programs)): ?>
+                    <p>No programs found. Add a program above.</p>
+                <?php else: ?>
+                    <div class="programs-grid">
+                        <?php foreach ($programs as $program): ?>
+                            <div class="program-card">
+                                <form method="POST" class="program-form">
+                                    <input type="hidden" name="program_id" value="<?php echo $program['id']; ?>">
+                                    <div class="form-group">
+                                        <label>Program Name</label>
+                                        <input type="text" name="program_name" value="<?php echo htmlspecialchars($program['program_name']); ?>" required>
+                                    </div>
+                                    <div class="form-group">
+                                        <label>Tuition Fee</label>
+                                        <input type="number" name="tuition_fee" value="<?php echo htmlspecialchars($program['tuition_fee']); ?>" required>
+                                    </div>
+                                    <div class="form-group">
+                                        <label>Ranking</label>
+                                        <input type="number" name="ranking" value="<?php echo htmlspecialchars($program['ranking']); ?>" required>
+                                    </div>
+                                    <div class="form-group">
+                                        <label>Admission Deadline</label>
+                                        <input type="date" name="admission_deadline" value="<?php echo $program['admission_deadline']; ?>" required>
+                                    </div>
+                                    <div class="program-actions">
+                                        <button type="submit" name="update_program" class="btn-update">Update</button>
+                                        <button type="submit" name="delete_program" class="btn-delete" onclick="return confirm('Are you sure you want to delete this program?')">Delete</button>
+                                    </div>
+                                </form>
+                            </div>
+                        <?php endforeach; ?>
+                    </div>
+                <?php endif; ?>
+            </div>
+        </main>
+    </div>
+
+    <script src="js/dashboard.js"></script>
+</body>
+</html> 

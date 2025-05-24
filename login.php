@@ -187,6 +187,33 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         </div>
     </main>
 
+    <section class="featured-universities">
+        <div class="university-banner">
+            <img src="https://placehold.co/1200x400/4a90e2/ffffff?text=Top+Universities+in+Pakistan" alt="Featured Universities" class="university-image">
+            <div class="university-overlay">
+                <h2>Top Universities in Pakistan</h2>
+                <p>Discover leading institutions for your academic journey</p>
+            </div>
+        </div>
+        <div class="university-list">
+            <div class="university-card">
+                <img src="https://placehold.co/400x300/4a90e2/ffffff?text=LUMS" alt="LUMS">
+                <h3>LUMS</h3>
+                <p>Lahore University of Management Sciences</p>
+            </div>
+            <div class="university-card">
+                <img src="https://placehold.co/400x300/4a90e2/ffffff?text=NUST" alt="NUST">
+                <h3>NUST</h3>
+                <p>National University of Sciences and Technology</p>
+            </div>
+            <div class="university-card">
+                <img src="https://placehold.co/400x300/4a90e2/ffffff?text=AKU" alt="AKU">
+                <h3>AKU</h3>
+                <p>Aga Khan University</p>
+            </div>
+        </div>
+    </section>
+
     <footer>
         <div class="footer-content">
             <div class="footer-section">
